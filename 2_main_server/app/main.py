@@ -1,7 +1,11 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from db.base import engine, Base
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
-@app.get("/")
-def root():
-    return {"message": "Hello World"}
+app = FastAPI(lifespan=lifespan)
