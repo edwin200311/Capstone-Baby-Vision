@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, Float, Text, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime ,timezone
 from db.base import Base
 
 class User(Base):
@@ -11,7 +11,6 @@ class User(Base):
     email         = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     name          = Column(String(100))
-    created_at    = Column(DateTime, default=datetime.utcnow)
 
     cameras = relationship("Camera", back_populates="user")
     alerts  = relationship("Alert", back_populates="user")
@@ -25,7 +24,6 @@ class Camera(Base):
     name       = Column(String(100), nullable=False)
     stream_url = Column(String(255), nullable=False)
     is_active  = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
 
     user             = relationship("User", back_populates="cameras")
     danger_zones     = relationship("DangerZone", back_populates="camera")
@@ -39,7 +37,6 @@ class DangerZone(Base):
     camera_id   = Column(Integer, ForeignKey("cameras.id", ondelete="CASCADE"))
     label       = Column(String(100))
     zone_points = Column(JSONB, nullable=False)
-    created_at  = Column(DateTime, default=datetime.utcnow)
 
     camera = relationship("Camera", back_populates="danger_zones")
 
@@ -53,7 +50,7 @@ class DetectionEvent(Base):
     confidence    = Column(Float)
     bbox          = Column(JSONB)
     snapshot_path = Column(String(255))
-    detected_at   = Column(DateTime, default=datetime.utcnow)
+    detected_at   = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     camera = relationship("Camera", back_populates="detection_events")
     alerts = relationship("Alert", back_populates="detection_event")
@@ -67,7 +64,7 @@ class Alert(Base):
     detection_id = Column(Integer, ForeignKey("detection_events.id", ondelete="SET NULL"), nullable=True)
     message      = Column(Text)
     is_read      = Column(Boolean, default=False)
-    sent_at      = Column(DateTime, default=datetime.utcnow)
+    sent_at      = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     user            = relationship("User", back_populates="alerts")
     detection_event = relationship("DetectionEvent", back_populates="alerts")
