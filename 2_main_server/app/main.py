@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from db.base import engine, Base
+from routers import users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -9,3 +10,6 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+# 라우터 등록
+app.include_router(users.router)
